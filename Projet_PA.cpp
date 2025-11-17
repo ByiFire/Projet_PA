@@ -40,7 +40,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
     AppendMenu(Param, MF_STRING, 1, L"Charger une image");
-    AppendMenu(Param, MF_STRING, 2, L"Ecrire un Message");
+    AppendMenu(Param, MF_STRING, 2, L"Ecrire un message");
     AppendMenu(Param, MF_STRING, 3, L"Afficher l'image");
     AppendMenu(Param, MF_STRING, 4, L"Decoder le texte");
     AppendMenu(Param, MF_STRING, 5, L"Sauvegarder l'image");
@@ -84,21 +84,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     case WM_DESTROY:
         PostQuitMessage(0);   // Termine la boucle principale
-        break;
-
-    case WM_CREATE:
-        CreateWindowEx(
-            0,
-            L"BUTTON",
-            L"bouhthon",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-            300, 300,     // Position X, Y
-            120, 35,    // Largeur, Hauteur
-            hwnd,
-            (HMENU)1,   // ID du bouton
-            (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-            NULL
-        );
         break;
         
     case WM_COMMAND:

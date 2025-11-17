@@ -1,0 +1,45 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\nreux-naudeix\\source\\repos\\Cours\\Prog_avancee\\Projet_PA\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A6D91F25-0315-4EC1-918A-88AEF3487F82}|Projet_PA.vcxproj|C:\\Users\\nreux-naudeix\\source\\repos\\Cours\\Prog_avancee\\Projet_PA\\Projet_PA.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A6D91F25-0315-4EC1-918A-88AEF3487F82}|Projet_PA.vcxproj|solutionrelative:Projet_PA.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Projet_PA.cpp",
+              "DocumentMoniker": "C:\\Users\\nreux-naudeix\\source\\repos\\Cours\\Prog_avancee\\Projet_PA\\Projet_PA.cpp",
+              "RelativeDocumentMoniker": "Projet_PA.cpp",
+              "ToolTip": "C:\\Users\\nreux-naudeix\\source\\repos\\Cours\\Prog_avancee\\Projet_PA\\Projet_PA.cpp*",
+              "RelativeToolTip": "Projet_PA.cpp*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-11-17T08:04:22.769Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
