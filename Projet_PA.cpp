@@ -1,115 +1,213 @@
 #include <windows.h>
+#include <gdiplus.h>
+#include <string>
 
-// Déclaration de la fonction de traitement des messages
-LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-HMENU Param;
-HMENU Menu;
-// Point d'entrée de l'application Windows
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    // 1️ Définir la classe de fenêtre
+#pragma comment(lib, "gdiplus.lib")
+
+using namespace Gdiplus;
+using namespace std;
+
+Gdiplus::Image* g_pImage = nullptr;
+HWND g_hEditMessage = nullptr;
+HWND g_hBtnValidate = nullptr;
+wstring g_userMessage;
+
+// IDs
+enum {
+    LOAD_IMAGE = 2001,   // Nouveau : charger depuis fichier
+    ID_MENU_WRITE = 102,
+    ID_MENU_SHOW = 103,
+    ID_MENU_DECODE = 104,
+    ID_MENU_SAVE = 105,
+
+    ID_BUTTON_LOAD_IMG = 1000,
+    ID_BTN_VALIDATE = 1001,
+    ID_EDIT_MESSAGE = 1002
+};
+
+LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+HMENU hMenuMain;
+HMENU hMenuParam;
+
+ULONG_PTR gdiplusToken; // nécessaire pour GDI+
+
+// WinMain
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+{
+
+    // Initialisation GDI+
+    GdiplusStartupInput gdiplusStartupInput;
+    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+    // Classe de fenêtre
     WNDCLASS wc = {};
-    wc.lpfnWndProc = WndProc;             // Fonction de traitement des messages
-    wc.hInstance = hInstance;             // Instance de l'application
-    wc.lpszClassName = L"MainWindow";     // Nom unique de la classe
+    wc.lpfnWndProc = MainWindowProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = L"MainWindow";
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 
+    if (!RegisterClass(&wc)) return 0;
 
-    wc.hbrBackground = CreateSolidBrush(RGB(255, 255, 255)); // Couleur de fond par défaut (blanche)
-
-    // 2️ Enregistrer la classe auprès du système
-    if (!RegisterClass(&wc)) {
-        MessageBox(NULL, L"Erreur : Enregistrement de la classe échoué.", L"Erreur", MB_ICONERROR);
-        return 0;
-    }
-
-    // 3️ Créer une fenêtre basée sur la classe enregistrée
+    // Fenêtre principale
     HWND hwnd = CreateWindowEx(
-        0, L"MainWindow", L"H&D Texts", WS_OVERLAPPEDWINDOW,
+        0, L"MainWindow", L"Projet Prog. Avancee", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 900, 600,
         NULL, NULL, hInstance, NULL
     );
 
-    if (!hwnd) {
-        MessageBox(NULL, L"Erreur : Création de la fenêtre échouée.", L"Erreur", MB_ICONERROR);
-        return 0;
-    }
+    if (!hwnd) return 0;
 
-    Menu = CreateMenu();
-    Param = CreateMenu();
+    // Menus
+    hMenuMain = CreateMenu();
+    hMenuParam = CreateMenu();
 
+    AppendMenu(hMenuParam, MF_STRING, LOAD_IMAGE, L"Afficher une image...");
+    AppendMenu(hMenuParam, MF_STRING, ID_MENU_WRITE, L"Ecrire un Message");
+    AppendMenu(hMenuParam, MF_STRING, ID_MENU_DECODE, L"Decoder le texte");
+    AppendMenu(hMenuParam, MF_STRING, ID_MENU_SAVE, L"Sauvegarder l'image");
+    AppendMenu(hMenuMain, MF_POPUP, (UINT_PTR)hMenuParam, L"Parametres");
 
+    SetMenu(hwnd, hMenuMain);
 
-
-    AppendMenu(Param, MF_STRING, 1, L"Charger une image");
-    AppendMenu(Param, MF_STRING, 2, L"Ecrire un message");
-    AppendMenu(Param, MF_STRING, 3, L"Afficher l'image");
-    AppendMenu(Param, MF_STRING, 4, L"Decoder le texte");
-    AppendMenu(Param, MF_STRING, 5, L"Sauvegarder l'image");
-    AppendMenu(Menu, MF_POPUP, (UINT_PTR(Param)), L"Parametres");
-
-
-
-    SetMenu(hwnd, Menu);
-
-    // 4️ Afficher la fenêtre à l'écran
+    // Afficher
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
 
-    // 5️ Boucle principale de messages
-    MSG msg = {};
+    // boucle de messages
+    MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg); // Traduit les entrées clavier (ex: touches accentuées)
-        DispatchMessage(&msg);  // Envoie le message à WndProc
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
+    // arrêter GDI+
+    GdiplusShutdown(gdiplusToken);
+
     return (int)msg.wParam;
-    
 }
 
-static int windowWidth;
-static int windowHeight;
-// EXERCICE 6
-static BOOL  g_dragging = FALSE;
-static POINT g_startMouse = {};   // position souris (écran) au clic
-static RECT  g_startWnd = {};   // rect fenêtre (écran) au clic
-// EXERCICE 7
-static int g_colorIndex = 0;
-static HBRUSH g_bgBrush = NULL;
+// WndProc
+LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_COMMAND:
+    {
+        int id = LOWORD(wParam);
+        switch (id)
+        {
 
-// Fonction de traitement des messages (callback)
-LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
+        case ID_BUTTON_LOAD_IMG:
+            // Charge test.bmp en mémoire
+            if (g_pImage) { delete g_pImage; g_pImage = nullptr; }
+            g_pImage = new Image(L"test.bmp");
+            MessageBox(hwnd, L"Image chargee ! Cliquez sur 'Afficher l'image'.", L"Info", MB_OK);
+            break;
+
+
+        case LOAD_IMAGE: // menu → choisir fichier
+        {
+            OPENFILENAME ofn;
+            wchar_t filePath[MAX_PATH] = L"";
+
+            ZeroMemory(&ofn, sizeof(ofn));
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = hwnd;
+            ofn.lpstrFilter = L"Images (*.bmp)\0*.bmp;\0";
+            ofn.lpstrFile = filePath;
+            ofn.nMaxFile = MAX_PATH;
+            ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+            if (GetOpenFileName(&ofn)) {
+                if (g_pImage) { delete g_pImage; g_pImage = nullptr; }
+
+                g_pImage = new Gdiplus::Image(filePath);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            break;
+        }
+
+        case ID_MENU_WRITE:
+        {
+            if (!g_hEditMessage)
+            {
+                g_hEditMessage = CreateWindowEx(
+                    0, L"EDIT", L"",
+                    WS_VISIBLE | WS_CHILD | WS_BORDER | ES_LEFT,
+                    50, 100, 300, 25,
+                    hwnd, (HMENU)ID_EDIT_MESSAGE,
+                    (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+                    NULL
+                );
+
+                g_hBtnValidate = CreateWindowEx(
+                    0, L"BUTTON", L"Valider",
+                    WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                    360, 100, 80, 25,
+                    hwnd, (HMENU)ID_BTN_VALIDATE,
+                    (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+                    NULL
+                );
+            }
+            break;
+        }
+
+        case ID_BTN_VALIDATE:
+        {
+            wchar_t buffer[512];
+            GetWindowText(g_hEditMessage, buffer, 512);
+            g_userMessage = buffer;
+
+            MessageBox(hwnd, g_userMessage.c_str(), L"Message reçu", MB_OK);
+
+            DestroyWindow(g_hEditMessage);
+            DestroyWindow(g_hBtnValidate);
+            g_hEditMessage = nullptr;
+            g_hBtnValidate = nullptr;
+            break;
+        }
+
+        case ID_MENU_SHOW:
+            InvalidateRect(hwnd, NULL, TRUE);
+            break;
+
+        }
+    }
+    break;
+
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+
+        Graphics gfx(hdc);
+
+        if (g_pImage) {
+            RECT rc;
+            GetClientRect(hwnd, &rc);  // récupère la taille de la fenêtre
+            int width = rc.right - rc.left;
+            int height = rc.bottom - rc.top;
+
+
+            gfx.DrawImage(g_pImage, 0, 0, width, height);
+        }
+
+        EndPaint(hwnd, &ps);
+    }
+    break;
+
     case WM_CLOSE:
-        DestroyWindow(hwnd);  // Quand l’utilisateur ferme la fenêtre
+        DestroyWindow(hwnd);
         break;
 
     case WM_DESTROY:
-        PostQuitMessage(0);   // Termine la boucle principale
+        PostQuitMessage(0);
         break;
-        
-    case WM_COMMAND:
-        if (LOWORD(wParam) == 1) {          // ID du bouton
-            MessageBox(hwnd, L"Az op", L"Info", MB_OK);
-        }
-        break;
-    
-
-    case WM_KEYDOWN: {
-        // EXERCICE 4
-        if (wParam == VK_ESCAPE) {
-            PostMessage(hwnd, WM_CLOSE, 0, 0);
-            return 0;
-        }
-        //wchar_t keyName[64] = L"";
-        //GetKeyNameText((LONG)lParam, keyName, 64);
-        //wchar_t title[128];
-        //wsprintf(title, L"Derniere touche: %s", keyName);
-        //SetWindowText(hwnd, title);
-        break;
-    }
-    
 
     default:
-        return DefWindowProc(hwnd, uMsg, wParam, lParam); // Traitement par défaut
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
+
     return 0;
 }
