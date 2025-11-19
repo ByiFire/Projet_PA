@@ -15,14 +15,14 @@ wstring g_userMessage;
 // IDs
 enum {
     LOAD_IMAGE = 2001,   // Nouveau : charger depuis fichier
-    ID_MENU_WRITE = 102,
-    ID_MENU_SHOW = 103,
-    ID_MENU_DECODE = 104,
-    ID_MENU_SAVE = 105,
+    WRITE_MESSAGE = 102,
+    SHOW_MENU = 103,
+    DECODE_MESSAGE = 104,
+    SAVE_IMAGE = 105,
 
-    ID_BUTTON_LOAD_IMG = 1000,
-    ID_BTN_VALIDATE = 1001,
-    ID_EDIT_MESSAGE = 1002
+    BUTTON_LOAD_IMG = 1000,
+    BTN_VALIDATE = 1001,
+    EDIT_MESSAGE = 1002
 };
 
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -63,9 +63,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
     hMenuParam = CreateMenu();
 
     AppendMenu(hMenuParam, MF_STRING, LOAD_IMAGE, L"Afficher une image...");
-    AppendMenu(hMenuParam, MF_STRING, ID_MENU_WRITE, L"Ecrire un Message");
-    AppendMenu(hMenuParam, MF_STRING, ID_MENU_DECODE, L"Decoder le texte");
-    AppendMenu(hMenuParam, MF_STRING, ID_MENU_SAVE, L"Sauvegarder l'image");
+    AppendMenu(hMenuParam, MF_STRING, WRITE_MESSAGE, L"Ecrire un Message");
+    AppendMenu(hMenuParam, MF_STRING, DECODE_MESSAGE, L"Decoder le texte");
+    AppendMenu(hMenuParam, MF_STRING, SAVE_IMAGE, L"Sauvegarder l'image");
     AppendMenu(hMenuMain, MF_POPUP, (UINT_PTR)hMenuParam, L"Parametres");
 
     SetMenu(hwnd, hMenuMain);
@@ -98,7 +98,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         switch (id)
         {
 
-        case ID_BUTTON_LOAD_IMG:
+        case BUTTON_LOAD_IMG:
             // Charge test.bmp en mémoire
             if (g_pImage) { delete g_pImage; g_pImage = nullptr; }
             g_pImage = new Image(L"test.bmp");
@@ -128,7 +128,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             break;
         }
 
-        case ID_MENU_WRITE:
+        case WRITE_MESSAGE:
         {
             if (!g_hEditMessage)
             {
@@ -136,7 +136,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     0, L"EDIT", L"",
                     WS_VISIBLE | WS_CHILD | WS_BORDER | ES_LEFT,
                     50, 100, 300, 25,
-                    hwnd, (HMENU)ID_EDIT_MESSAGE,
+                    hwnd, (HMENU)EDIT_MESSAGE,
                     (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
                     NULL
                 );
@@ -145,7 +145,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     0, L"BUTTON", L"Valider",
                     WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                     360, 100, 80, 25,
-                    hwnd, (HMENU)ID_BTN_VALIDATE,
+                    hwnd, (HMENU)BTN_VALIDATE,
                     (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
                     NULL
                 );
@@ -153,7 +153,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             break;
         }
 
-        case ID_BTN_VALIDATE:
+        case BTN_VALIDATE:
         {
             wchar_t buffer[512];
             GetWindowText(g_hEditMessage, buffer, 512);
@@ -168,7 +168,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             break;
         }
 
-        case ID_MENU_SHOW:
+        case SHOW_MENU:
             InvalidateRect(hwnd, NULL, TRUE);
             break;
 
